@@ -146,7 +146,7 @@ export function ModuleBookingDesk({
               Rental Bookings
             </h2>
             {orders.some((o) => o.paymentStatus === "PENDING") && (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-300/40 animate-pulse">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-300/40 dark:border-amber-700/50 animate-pulse">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                 Live Midtrans Syncing
               </span>
@@ -229,7 +229,7 @@ export function ModuleBookingDesk({
                       {isPaid ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-300 font-medium"
+                          className="text-[10px] bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 font-medium"
                         >
                           PAID
                         </Badge>
@@ -243,7 +243,7 @@ export function ModuleBookingDesk({
                       ) : (
                         <Badge
                           variant="outline"
-                          className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 font-medium"
+                          className="text-[10px] bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 font-medium"
                         >
                           UNPAID
                         </Badge>

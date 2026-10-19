@@ -253,7 +253,7 @@ export function BookingModal({
                   const found = countries.find((c) => c.code === e.target.value);
                   if (found) setSelectedCountry(found);
                 }}
-                className="w-full text-xs border border-input rounded p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
+                className="w-full text-xs border border-input rounded-md p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
               >
                 {countries.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -290,7 +290,7 @@ export function BookingModal({
                 value={activeBoothId}
                 disabled={submitting}
                 onChange={(e) => setBoothId(e.target.value)}
-                className="w-full text-xs border border-input rounded p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
+                className="w-full text-xs border border-input rounded-md p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
               >
                 {booths.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -301,7 +301,7 @@ export function BookingModal({
             </div>
 
             {/* Fee Preview */}
-            <div className="bg-muted/30 border border-border p-3 rounded text-xs space-y-1">
+            <div className="bg-muted/30 border border-border p-3 rounded-md text-xs space-y-1">
               <div className="flex justify-between text-muted-foreground">
                 <span>Rental ({daysDiff} days x Rp {currentDailyRate.toLocaleString("id-ID")}):</span>
                 <span>Rp {currentRentalSubtotal.toLocaleString("id-ID")}</span>
@@ -337,12 +337,12 @@ export function BookingModal({
           </form>
         ) : (
           <div className="space-y-3.5 text-xs pt-1">
-            <div className="border border-amber-300 bg-amber-500/10 p-4 rounded-lg space-y-2.5">
+            <div className="border border-amber-300 dark:border-amber-700/60 bg-amber-500/10 dark:bg-amber-950/20 p-4 rounded-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Order {snapResult.orderNumber} Created
                 </span>
-                <span className="text-[10px] font-semibold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-semibold bg-amber-500/20 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md">
                   UNPAID (PENDING)
                 </span>
               </div>
@@ -351,7 +351,7 @@ export function BookingModal({
                 If you close this dialog before paying, this order remains saved as <strong>Unpaid (Pending)</strong> in the Rental Bookings desk and can be completed anytime.
               </p>
 
-              <div className="bg-background p-2.5 rounded border border-border font-mono text-[11px] break-all">
+              <div className="bg-background p-2.5 rounded-md border border-border font-mono text-[11px] break-all">
                 <span className="text-muted-foreground block text-[10px]">SNAP TOKEN:</span>
                 <span>{snapResult.token}</span>
               </div>
@@ -373,7 +373,7 @@ export function BookingModal({
                     alert(`Order ${snapResult.orderNumber} payment confirmed! Order is now ACTIVE.`);
                     handleClose();
                   }}
-                  className="w-full text-xs border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                  className="w-full text-xs border-emerald-600 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                 >
                   ✓ Simulate Payment Success (Testing/Sandbox)
                 </Button>

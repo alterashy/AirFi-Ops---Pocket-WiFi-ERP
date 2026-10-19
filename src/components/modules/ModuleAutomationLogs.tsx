@@ -64,19 +64,19 @@ export function ModuleAutomationLogs({ inspections }: ModuleAutomationLogsProps)
                     <span
                       className={`text-xs font-medium ${
                         i.unitCondition === "GOOD"
-                          ? "text-emerald-700"
+                          ? "text-emerald-700 dark:text-emerald-400"
                           : i.unitCondition === "SCRATCHED"
-                          ? "text-amber-700"
-                          : "text-destructive"
+                          ? "text-amber-800 dark:text-amber-300"
+                          : "text-destructive dark:text-red-400"
                       }`}
                     >
                       {i.unitCondition}
                     </span>
                   </TableCell>
-                  <TableCell className="text-destructive text-xs">
+                  <TableCell className="text-destructive dark:text-red-400 text-xs">
                     {i.deductionFee ? `Rp ${i.deductionFee.toLocaleString("id-ID")}` : "-"}
                   </TableCell>
-                  <TableCell className="text-emerald-700 font-medium text-xs">
+                  <TableCell className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
                     Rp {i.refundAmount?.toLocaleString("id-ID")}
                   </TableCell>
                   <TableCell>

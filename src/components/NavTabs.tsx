@@ -17,7 +17,7 @@ export function NavTabs({ activeTab, onTabChange }: NavTabsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 w-full border-b border-border bg-card rounded-t-lg text-xs overflow-hidden">
+    <div className="grid grid-cols-2 sm:grid-cols-4 w-full border border-b border-border bg-card rounded-t-lg text-xs overflow-hidden">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

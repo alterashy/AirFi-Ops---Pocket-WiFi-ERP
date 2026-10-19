@@ -71,7 +71,7 @@ export function ModuleFleetTracking({
           <select
             value={selectedBoothFilter}
             onChange={(e) => setSelectedBoothFilter(e.target.value)}
-            className="text-xs border border-input rounded p-1.5 bg-background text-foreground outline-none focus:border-ring"
+            className="text-xs border border-input rounded-md p-1.5 bg-background text-foreground outline-none focus:border-ring"
           >
             <option value="ALL">All Booths</option>
             {booths.map((b) => (
@@ -84,7 +84,7 @@ export function ModuleFleetTracking({
           <select
             value={selectedStatusFilter}
             onChange={(e) => setSelectedStatusFilter(e.target.value)}
-            className="text-xs border border-input rounded p-1.5 bg-background text-foreground outline-none focus:border-ring"
+            className="text-xs border border-input rounded-md p-1.5 bg-background text-foreground outline-none focus:border-ring"
           >
             <option value="ALL">All Statuses</option>
             <option value="AVAILABLE">Available</option>
@@ -136,7 +136,11 @@ export function ModuleFleetTracking({
                           ? "secondary"
                           : "outline"
                       }
-                      className="text-[10px] font-medium"
+                      className={
+                        d.status === "MAINTENANCE"
+                          ? "text-[10px] font-medium bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700/60"
+                          : "text-[10px] font-medium"
+                      }
                     >
                       {d.status}
                     </Badge>

@@ -125,7 +125,7 @@ export function ModuleReturnDesk({
                 setSelectedOrderId(e.target.value);
                 setInspectionResult(null);
               }}
-              className="w-full text-xs border border-input rounded p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
+              className="w-full text-xs border border-input rounded-md p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
             >
               <option value="">Select order...</option>
               {orders
@@ -140,7 +140,7 @@ export function ModuleReturnDesk({
           </div>
 
           {selectedOrder ? (
-            <div className="bg-background p-3 rounded border border-border text-xs space-y-1.5 text-foreground">
+            <div className="bg-background p-3 rounded-md border border-border text-xs space-y-1.5 text-foreground">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Customer:</span>
                 <span className="font-medium">{selectedOrder.customerName}</span>
@@ -167,7 +167,7 @@ export function ModuleReturnDesk({
               </div>
             </div>
           ) : (
-            <div className="text-xs text-muted-foreground p-3 text-center border border-dashed border-border rounded bg-background">
+            <div className="text-xs text-muted-foreground p-3 text-center border border-dashed border-border rounded-md bg-background">
               Select an active order above to begin inspection.
             </div>
           )}
@@ -180,7 +180,7 @@ export function ModuleReturnDesk({
               value={returnBoothId}
               disabled={inspecting}
               onChange={(e) => setReturnBoothId(e.target.value)}
-              className="w-full text-xs border border-input rounded p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
+              className="w-full text-xs border border-input rounded-md p-2 bg-background text-foreground outline-none focus:border-ring disabled:opacity-50"
             >
               {booths.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -245,7 +245,7 @@ export function ModuleReturnDesk({
               Accessories
             </label>
             
-            <label className="flex items-center justify-between text-xs bg-background p-2 rounded border border-border cursor-pointer">
+            <label className="flex items-center justify-between text-xs bg-background p-2 rounded-md border border-border cursor-pointer">
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={cableReturned}
@@ -259,7 +259,7 @@ export function ModuleReturnDesk({
               )}
             </label>
 
-            <label className="flex items-center justify-between text-xs bg-background p-2 rounded border border-border cursor-pointer">
+            <label className="flex items-center justify-between text-xs bg-background p-2 rounded-md border border-border cursor-pointer">
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={pouchReturned}
@@ -273,7 +273,7 @@ export function ModuleReturnDesk({
               )}
             </label>
 
-            <label className="flex items-center justify-between text-xs bg-background p-2 rounded border border-border cursor-pointer">
+            <label className="flex items-center justify-between text-xs bg-background p-2 rounded-md border border-border cursor-pointer">
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={chargerReturned}
@@ -303,7 +303,7 @@ export function ModuleReturnDesk({
           </div>
 
           {/* Settlement Preview */}
-          <div className="bg-background p-3 rounded border border-border text-xs space-y-1">
+          <div className="bg-background p-3 rounded-md border border-border text-xs space-y-1">
             <div className="flex justify-between text-muted-foreground">
               <span>Deposit:</span>
               <span>Rp {activeDeposit.toLocaleString("id-ID")}</span>
@@ -316,7 +316,7 @@ export function ModuleReturnDesk({
             )}
             <div className="flex justify-between font-semibold text-foreground border-t border-border pt-1">
               <span>Net Refund:</span>
-              <span className="text-emerald-700">
+              <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                 Rp {previewRefundAmount.toLocaleString("id-ID")}
               </span>
             </div>
@@ -339,20 +339,20 @@ export function ModuleReturnDesk({
         <div
           className={`border p-4 rounded-lg space-y-2 text-xs ${
             inspectionResult.inspection?.depositRefundStatus === "RELEASED"
-              ? "border-emerald-300 bg-emerald-50/50"
+              ? "border-emerald-300 dark:border-emerald-800 bg-emerald-500/10 dark:bg-emerald-950/20"
               : inspectionResult.inspection?.depositRefundStatus === "PARTIAL"
-              ? "border-amber-300 bg-amber-50/50"
-              : "border-red-300 bg-red-50/50"
+              ? "border-amber-300 dark:border-amber-800 bg-amber-500/10 dark:bg-amber-950/20"
+              : "border-destructive/30 bg-destructive/10"
           }`}
         >
           <div className="flex items-center justify-between">
             <span
               className={`font-semibold ${
                 inspectionResult.inspection?.depositRefundStatus === "RELEASED"
-                  ? "text-emerald-950"
+                  ? "text-emerald-800 dark:text-emerald-300"
                   : inspectionResult.inspection?.depositRefundStatus === "PARTIAL"
-                  ? "text-amber-950"
-                  : "text-red-950"
+                  ? "text-amber-800 dark:text-amber-300"
+                  : "text-destructive"
               }`}
             >
               Return Completed &bull; Deposit {inspectionResult.inspection?.depositRefundStatus}
@@ -362,10 +362,10 @@ export function ModuleReturnDesk({
                 variant="outline"
                 className={`text-[10px] font-medium ${
                   inspectionResult.inspection?.depositRefundStatus === "RELEASED"
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700"
                     : inspectionResult.inspection?.depositRefundStatus === "PARTIAL"
-                    ? "bg-amber-100 text-amber-800 border-amber-300"
-                    : "bg-red-100 text-red-800 border-red-300"
+                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700"
+                    : "bg-destructive/15 text-destructive border-destructive/30"
                 }`}
               >
                 Refund: Rp {(inspectionResult.inspection?.refundAmount || 0).toLocaleString("id-ID")}

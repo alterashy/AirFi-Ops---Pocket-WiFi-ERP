@@ -19,18 +19,17 @@ export async function GET(req: NextRequest) {
     }
 
     let updatedCount = 0;
+    const twentyMinsAgo = new Date(Date.now() - 20 * 60 * 1000);
 
     for (const order of pendingOrders) {
       const midtransStatus = await checkMidtransStatus(order.orderNumber);
-
-      if (!midtransStatus) continue;
-
       const deviceIds = order.orderDevices.map((od) => od.deviceId);
-      const { transactionStatus, fraudStatus } = midtransStatus;
+      const isStale = new Date(order.createdAt).getTime() < twentyMinsAgo.getTime();
 
       if (
-        transactionStatus === "settlement" ||
-        (transactionStatus === "capture" && fraudStatus === "accept")
+        midtransStatus &&
+        (midtransStatus.transactionStatus === "settlement" ||
+          (midtransStatus.transactionStatus === "capture" && midtransStatus.fraudStatus === "accept"))
       ) {
         await prisma.$transaction(async (tx) => {
           await tx.order.update({
@@ -50,15 +49,17 @@ export async function GET(req: NextRequest) {
         });
         updatedCount++;
       } else if (
-        transactionStatus === "cancel" ||
-        transactionStatus === "deny" ||
-        transactionStatus === "expire"
+        midtransStatus?.transactionStatus === "cancel" ||
+        midtransStatus?.transactionStatus === "deny" ||
+        midtransStatus?.transactionStatus === "expire" ||
+        (!midtransStatus && isStale)
       ) {
+        // Auto-expire abandoned orders after 20 minutes and release pocket Wi-Fi hardware
         await prisma.$transaction(async (tx) => {
           await tx.order.update({
             where: { id: order.id },
             data: {
-              paymentStatus: "CANCELLED",
+              paymentStatus: isStale ? "EXPIRED" : "CANCELLED",
               orderStatus: "CANCELLED",
             },
           });

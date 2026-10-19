@@ -43,6 +43,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
+    // Idempotency guard: prevent duplicate return inspections or duplicate refunds
+    if (order.orderStatus === "COMPLETED") {
+      return NextResponse.json(
+        { error: `Order ${order.orderNumber} has already been returned and settled.` },
+        { status: 400 }
+      );
+    }
+
+    const existingInspection = await prisma.inspection.findFirst({
+      where: { orderId: order.id },
+    });
+
+    if (existingInspection) {
+      return NextResponse.json(
+        { error: `Inspection and deposit refund already completed for order ${order.orderNumber}.` },
+        { status: 400 }
+      );
+    }
+
     // Auto-resolve deviceId from order assignment if omitted
     const targetDeviceId = deviceId || order.orderDevices[0]?.deviceId;
     if (!targetDeviceId) {

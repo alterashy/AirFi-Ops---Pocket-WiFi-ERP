@@ -1,4 +1,5 @@
 // Midtrans Snap Payment Gateway Integration Helper
+import crypto from "crypto";
 
 export interface CreateSnapTransactionParams {
   orderId: string;
@@ -48,6 +49,10 @@ export async function createSnapTransaction(
         name: `AirFi Rental & Deposit: ${params.orderId}`,
       },
     ],
+    expiry: {
+      duration: 20,
+      unit: "minutes",
+    },
     credit_card: {
       secure: true,
     },
@@ -139,5 +144,46 @@ export async function checkMidtransStatus(
   }
 
   return null;
+}
+
+export interface VerifySignatureParams {
+  orderId: string;
+  statusCode: string;
+  grossAmount: string;
+  signatureKey: string;
+}
+
+export function verifyMidtransSignature({
+  orderId,
+  statusCode,
+  grossAmount,
+  signatureKey,
+}: VerifySignatureParams): boolean {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-demo-key";
+
+  // Allow simulated/mock webhook callbacks in development when using demo key
+  if ((!serverKey || serverKey.includes("demo-key")) && process.env.NODE_ENV !== "production") {
+    return true;
+  }
+
+  if (!orderId || !statusCode || !grossAmount || !signatureKey) {
+    return false;
+  }
+
+  // Midtrans formula: SHA512(order_id + status_code + gross_amount + ServerKey)
+  const expectedInput = `${orderId}${statusCode}${grossAmount}${serverKey}`;
+  const expectedSignature = crypto
+    .createHash("sha512")
+    .update(expectedInput)
+    .digest("hex");
+
+  try {
+    const keyBuf = Buffer.from(signatureKey, "utf-8");
+    const expBuf = Buffer.from(expectedSignature, "utf-8");
+    if (keyBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(keyBuf, expBuf);
+  } catch {
+    return signatureKey.toLowerCase() === expectedSignature.toLowerCase();
+  }
 }
 

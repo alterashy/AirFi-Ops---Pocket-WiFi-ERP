@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const activeOnly = req.nextUrl.searchParams.get("active") === "true";
+    const { searchParams } = new URL(req.url);
+    const activeOnly = searchParams.get("active") === "true";
     const booths = await prisma.airportBooth.findMany({
       where: activeOnly ? { isActive: true } : undefined,
       include: {

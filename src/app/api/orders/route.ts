@@ -90,51 +90,58 @@ export async function POST(req: NextRequest) {
       : null;
     const resolvedReturnBoothId = returnBooth ? returnBooth.id : resolvedBoothId;
 
-    // Find an available device at pickup booth
-    let device = await prisma.device.findFirst({
-      where: {
-        boothId: resolvedBoothId,
-        status: "AVAILABLE",
-        orderDevices: {
-          none: {
-            order: {
-              orderStatus: { in: ["ACTIVE", "BOOKED"] },
-            },
-          },
-        },
-      },
-    });
-
-    if (!device) {
-      device = await prisma.device.findFirst({
-        where: {
-          status: "AVAILABLE",
-          orderDevices: {
-            none: {
-              order: {
-                orderStatus: { in: ["ACTIVE", "BOOKED"] },
-              },
-            },
-          },
-        },
-      });
-    }
-
-    if (!device) {
-      return NextResponse.json(
-        { error: "No available pocket Wi-Fi devices in stock. Please replenish fleet." },
-        { status: 400 }
-      );
-    }
-
     // 3. Generate Order Number: JM-YYYYMMDD-XXX-RAND (guaranteed unique for Midtrans)
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const randSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const countToday = await prisma.order.count();
     const orderNumber = `JM-${todayStr}-${String(countToday + 1).padStart(3, "0")}-${randSuffix}`;
 
-    // 4. Create Order & assign device inside transaction
+    // 4. Atomically find available device & create order inside a single transaction
+    // Exclude devices currently tied to active orders or unexpired bookings (< 20 mins)
+    const twentyMinsAgo = new Date(Date.now() - 20 * 60 * 1000);
+
     const newOrder = await prisma.$transaction(async (tx) => {
+      // Find available device at pickup booth
+      let device = await tx.device.findFirst({
+        where: {
+          boothId: resolvedBoothId,
+          status: "AVAILABLE",
+          orderDevices: {
+            none: {
+              order: {
+                OR: [
+                  { orderStatus: "ACTIVE" },
+                  { orderStatus: "BOOKED", createdAt: { gte: twentyMinsAgo } },
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      // Fallback: check any available device across other booths
+      if (!device) {
+        device = await tx.device.findFirst({
+          where: {
+            status: "AVAILABLE",
+            orderDevices: {
+              none: {
+                order: {
+                  OR: [
+                    { orderStatus: "ACTIVE" },
+                    { orderStatus: "BOOKED", createdAt: { gte: twentyMinsAgo } },
+                  ],
+                },
+              },
+            },
+          },
+        });
+      }
+
+      if (!device) {
+        throw new Error("No available pocket Wi-Fi devices in stock. Please replenish fleet.");
+      }
+
       const order = await tx.order.create({
         data: {
           orderNumber,

@@ -1,0 +1,90 @@
+{
+  "id": "airfi-refund",
+  "name": "AirFi Ops Airport Fast-Return & Deposit Refund Workflow",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "airfi-refund",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Airport Return Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 340],
+      "webhookId": "airfi-refund"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst orderId = body.orderId || 'ORD-UNKNOWN';\nconst orderNumber = body.orderNumber || orderId;\nconst customerName = body.customerName || 'Valued Customer';\nconst customerEmail = body.customerEmail || 'customer@example.com';\nconst depositAmount = Number(body.depositAmount) || 500000;\n\nconst details = body.inspectionDetails || {};\nconst unitCondition = details.unitCondition || (body.condition === 'DAMAGED' ? 'DAMAGED' : 'GOOD');\nconst cableReturned = details.cableReturned !== false;\nconst pouchReturned = details.pouchReturned !== false;\nconst chargerReturned = details.chargerReturned !== false;\n\nlet calculatedDeduction = 0;\nconst deductions = [];\nif (!cableReturned) {\n  calculatedDeduction += 50000;\n  deductions.push('USB-C Cable (Rp 50.000)');\n}\nif (!pouchReturned) {\n  calculatedDeduction += 50000;\n  deductions.push('Travel Pouch (Rp 50.000)');\n}\nif (!chargerReturned) {\n  calculatedDeduction += 50000;\n  deductions.push('Wall Charger (Rp 50.000)');\n}\nif (unitCondition === 'DAMAGED') {\n  calculatedDeduction += 350000;\n  deductions.push('Unit Damage Penalty (Rp 350.000)');\n}\n\nconst deductionFee = body.deductionFee !== undefined ? Number(body.deductionFee) : calculatedDeduction;\nconst refundAmount = body.refundAmount !== undefined ? Number(body.refundAmount) : Math.max(0, depositAmount - deductionFee);\nconst status = body.status || (deductionFee === 0 ? 'RELEASED' : refundAmount > 0 ? 'PARTIAL' : 'HELD');\n\nconst isFullRelease = status === 'RELEASED';\nconst isPartial = status === 'PARTIAL';\nconst embedColor = isFullRelease ? 3066993 : isPartial ? 15844367 : 15158332;\n\nconst title = isFullRelease\n  ? '[PASSED] Unit Inspection Approved & Full Deposit Released'\n  : isPartial\n  ? '[PARTIAL] Inspection Complete - Partial Deposit Released'\n  : '[HELD] Physical Damage / Incomplete - Deposit Withheld';\n\nconst description = isFullRelease\n  ? `Physical inspection and accessories check for customer **${customerName}** passed all quality checks.`\n  : isPartial\n  ? `Physical inspection noted deductions (${deductions.join(', ')}). Net refund processed.`\n  : `Unit returned with heavy damages/missing parts (${deductions.join(', ')}). Full deposit withheld for repair review.`;\n\nconst message = isFullRelease\n  ? `Security deposit refund of Rp ${refundAmount.toLocaleString('id-ID')} processed successfully to customer account.`\n  : isPartial\n  ? `Inspection completed with deductions of Rp ${deductionFee.toLocaleString('id-ID')}. Partial refund of Rp ${refundAmount.toLocaleString('id-ID')} released.`\n  : `Unit damaged or incomplete. Full deposit of Rp ${depositAmount.toLocaleString('id-ID')} held pending repair review.`;\n\nreturn [{\n  json: {\n    orderId,\n    orderNumber,\n    customerName,\n    customerEmail,\n    depositAmount,\n    refundAmount,\n    deductionFee,\n    status,\n    condition: body.condition || (isFullRelease ? 'PASSED' : unitCondition === 'DAMAGED' ? 'DAMAGED' : 'INCOMPLETE'),\n    processedAt: new Date().toISOString(),\n    message,\n    discordPayload: {\n      content: '**[AirFi Ops ERP] Device Return & Deposit Refund Report**',\n      embeds: [\n        {\n          title,\n          description,\n          color: embedColor,\n          fields: [\n            { name: 'Order Number', value: String(orderNumber), inline: true },\n            { name: 'Customer', value: String(customerName), inline: true },\n            { name: 'Unit Condition', value: String(unitCondition), inline: true },\n            { name: 'Held Deposit', value: `Rp ${depositAmount.toLocaleString('id-ID')}`, inline: true },\n            { name: 'Deduction Fee', value: `Rp ${deductionFee.toLocaleString('id-ID')}`, inline: true },\n            { name: 'Net Refund', value: `Rp ${refundAmount.toLocaleString('id-ID')}`, inline: true },\n            { name: 'Deposit Status', value: String(status), inline: true }\n          ],\n          footer: {\n            text: 'AirFi Ops ERP - Automated via n8n Engine'\n          },\n          timestamp: new Date().toISOString()\n        }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "evaluate-refund",
+      "name": "Evaluate Inspection & Refund",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 340]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ orderId: $json.orderId, orderNumber: $json.orderNumber, customerName: $json.customerName, customerEmail: $json.customerEmail, depositAmount: $json.depositAmount, refundAmount: $json.refundAmount, deductionFee: $json.deductionFee, status: $json.status, processedAt: $json.processedAt, message: $json.message }) }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to AirFi Ops ERP",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1519969573640605796/SaqKkC_txGDShqlFAmifDcoBepEgqEnB0QCpgR7YkNKe5Q0QApx5O2JnbIdfxXk9d6Aj",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.discordPayload) }}",
+        "options": {}
+      },
+      "id": "discord-notify",
+      "name": "Send Discord Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 440]
+    }
+  ],
+  "connections": {
+    "Airport Return Webhook": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Inspection & Refund",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Inspection & Refund": {
+      "main": [
+        [
+          {
+            "node": "Respond to AirFi Ops ERP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Discord Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

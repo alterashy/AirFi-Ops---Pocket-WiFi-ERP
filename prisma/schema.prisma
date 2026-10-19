@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model AirportBooth {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String
+  city         String
+  terminal     String
+  isActive     Boolean  @default(true)
+  devices      Device[]
+  pickupOrders Order[]  @relation("PickupBooth")
+  returnOrders Order[]  @relation("ReturnBooth")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Device {
+  id           String        @id @default(cuid())
+  imei         String        @unique
+  serialNumber String        @unique
+  model        String
+  status       String        @default("AVAILABLE")
+  boothId      String?
+  booth        AirportBooth? @relation(fields: [boothId], references: [id])
+  orderDevices OrderDevice[]
+  inspections  Inspection[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Order {
+  id                 String        @id @default(cuid())
+  orderNumber        String        @unique
+  customerName       String
+  customerEmail      String
+  customerPhone      String
+  destinationCountry String
+  countryCode        String
+  startDate          DateTime
+  endDate            DateTime
+  rentalDays         Int
+  dailyRate          Float
+  rentalTotal        Float
+  depositAmount      Float         @default(500000)
+  grandTotal         Float
+  paymentStatus      String        @default("PENDING") // PENDING, PAID, CANCELLED, REFUNDED
+  midtransSnapToken  String?
+  midtransOrderId    String?
+  orderStatus        String        @default("BOOKED") // BOOKED, PICKED_UP, ACTIVE, RETURNED, COMPLETED
+  pickupBoothId      String?
+  pickupBooth        AirportBooth? @relation("PickupBooth", fields: [pickupBoothId], references: [id])
+  returnBoothId      String?
+  returnBooth        AirportBooth? @relation("ReturnBooth", fields: [returnBoothId], references: [id])
+  orderDevices       OrderDevice[]
+  inspections        Inspection[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model OrderDevice {
+  id       String @id @default(cuid())
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deviceId String
+  device   Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, deviceId])
+}
+
+model Inspection {
+  id                  String   @id @default(cuid())
+  orderId             String
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deviceId            String
+  device              Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  inspectedBy         String   @default("Booth Staff CGK-T3")
+  unitCondition       String   @default("GOOD") // GOOD, SCRATCHED, DAMAGED
+  cableReturned       Boolean  @default(true)
+  pouchReturned       Boolean  @default(true)
+  chargerReturned     Boolean  @default(true)
+  allPassed           Boolean  @default(true)
+  depositRefundStatus String   @default("PENDING") // RELEASED, HELD, PARTIAL
+  refundAmount        Float    @default(0)
+  deductionFee        Float    @default(0)
+  n8nExecutionId      String?
+  n8nResponseStatus   String?
+  notes               String?
+  inspectedAt         DateTime @default(now())
+}

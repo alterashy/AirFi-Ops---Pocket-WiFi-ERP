@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: airfi-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/airfi-refund
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY:-SB-Mid-server-demo-key}
+      - NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY:-SB-Mid-client-demo-key}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION:-false}
+      - REST_COUNTRIES_API_KEY=${REST_COUNTRIES_API_KEY:-rc_live_1339bb9903c749bdba98647c9eadcb91}
+    depends_on:
+      - n8n
+    networks:
+      - airfi-network
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: airfi-n8n-automation
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - GENERIC_TIMEZONE=Asia/Jakarta
+      - TZ=Asia/Jakarta
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./docs/n8n/airfi-refund-workflow.json:/workflows/airfi-refund-workflow.json:ro
+      - ./docs/n8n/init-n8n.sh:/docker-entrypoint-init.sh:ro
+    entrypoint: ["/bin/sh", "/docker-entrypoint-init.sh"]
+    networks:
+      - airfi-network
+
+volumes:
+  n8n_data:
+
+networks:
+  airfi-network:
+    driver: bridge
